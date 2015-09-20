@@ -37,7 +37,7 @@ How does it work?
 
 The software's structure is shown on figure 1.
 
-![Bash manager structure](https://github.com/lingtalfi/bashmanager/doc/images/bash-manager-structure.jpg "Bash manager 
+![Bash manager structure](https://github.com/lingtalfi/bashmanager/blob/master/doc/images/bash-manager-structure.jpg "Bash manager 
 structure")
 
 
