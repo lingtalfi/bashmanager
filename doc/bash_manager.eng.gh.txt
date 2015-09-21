@@ -280,7 +280,7 @@ Every Bash manager software has the same structure, contained in a so-called **H
  
      
 Tip: You don't have to create this structure by hand, the Bash manager framework provides an utility
-    called utils/new_home.sh that creates this structure for you. 
+    in code/utils/new_home.sh that creates this structure for you. 
     
     
     

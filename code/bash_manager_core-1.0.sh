@@ -139,7 +139,7 @@ _program_name="bash manager"
 # 
 
 declare -A SPLITLINE_ARR
-function splitLine # ( string, delimiter [, argNameN ]* )
+splitLine () # ( string, delimiter [, argNameN ]* )
 {
     unset SPLITLINE_ARR
     declare -gA SPLITLINE_ARR=[]
@@ -175,7 +175,7 @@ function splitLine # ( string, delimiter [, argNameN ]* )
 
 
 # Utils
-function error # ( message )
+error () # ( message )
 {
     echo -e "$_program_name: error: $1" >&2
     RETURN_CODE=$ERROR_CODE
@@ -191,7 +191,7 @@ function error # ( message )
 
 
 
-function warning # ( message)
+warning () # ( message)
 {
     old=$VERBOSE
     VERBOSE=1
@@ -199,12 +199,12 @@ function warning # ( message)
     VERBOSE=$old
 }
 
-function confError # ()
+confError () # ()
 {
     error "Bad config: $1"
 }
 
-function abort {
+abort (){
     error "Aborting..."
     exit "$ERROR_CODE"
 }
@@ -213,7 +213,7 @@ function abort {
 # level=0 means no special color
 # level=1 means warning color
 # level=2 means important color
-function log # (message, level=0)
+log () # (message, level=0)
 {
     if [ 1 -eq $VERBOSE ]; then
         if [ -z "$2" ]; then
@@ -232,7 +232,7 @@ function log # (message, level=0)
 
 
 # outputs a list of elements of separated by a sep 
-function toList # ( arrayEls, ?sep ) 
+toList ()# ( arrayEls, ?sep ) 
 {
     sep="${2:-, }"
     arr=("${!1}")
@@ -249,14 +249,14 @@ function toList # ( arrayEls, ?sep )
 
 
 # same as toList, but prints a header first 
-function printList # ( header, arrayEls, ?sep=", " ) 
+printList ()# ( header, arrayEls, ?sep=", " ) 
 {
     echo -n "$1"
     sep=${3:-, }
     toList "$2" "$sep"
 }
 
-function printAssocArray # ( assocArrayName ) 
+printAssocArray ()# ( assocArrayName ) 
 {
     var=$(declare -p "$1")
     eval "declare -A _arr="${var#*=}
@@ -267,7 +267,7 @@ function printAssocArray # ( assocArrayName )
 }
 
 # outputs an array as a stack beginning by a leading expression 
-function toStack # ( arrayEls, ?leader="-- ") 
+toStack ()# ( arrayEls, ?leader="-- ") 
 {
     lead="${2:--- }"
     arr=("${!1}")
@@ -279,14 +279,14 @@ function toStack # ( arrayEls, ?leader="-- ")
 
 
 # same as toStack, but prints a header first 
-function printStack # ( header, arrayEls, ?leader="-- " ) 
+printStack ()# ( header, arrayEls, ?leader="-- " ) 
 {
     echo -n "$1"
     lead=${3:--- }
     toStack "$2" "$lead"
 }
 
-function printStackOrList
+printStackOrList ()
 {
     name=("${!2}")
     len="${#name[@]}"
@@ -299,7 +299,7 @@ function printStackOrList
 }
 
 # This method should print ---non blank and comments stripped--- lines of the given config file
-function printConfigLines 
+printConfigLines ()
 {
    while read line || [ -n "$line" ]; do
         
@@ -312,7 +312,7 @@ function printConfigLines
 }
 
 # Store the key and values found in configFile into the array which arrayEls is given
-function collectConfig #( arrayName, configFile )
+collectConfig ()#( arrayName, configFile )
 {
     arr=("$1")
     while read line
@@ -327,7 +327,7 @@ function collectConfig #( arrayName, configFile )
 
 
 
-function dumpAssoc # ( arrayName ) 
+dumpAssoc ()# ( arrayName ) 
 {
     title="${1^^}"
     echo 
@@ -338,7 +338,7 @@ function dumpAssoc # ( arrayName )
 }
 
 
-function parseAllValues # ( configFile ) 
+parseAllValues ()# ( configFile ) 
 {
     configFile="$1"
     namespace=""
@@ -386,7 +386,7 @@ function parseAllValues # ( configFile )
 # We can use this function to do one of the following:
 # -- check if an associative array has a certain key            inArray "myKey" "${!myArray[@]}" 
 # -- check if an associative array contains a certain value     inArray "myValue" "${myArray[@]}"
-function inArray # ( value, arrayKeysOrValues ) 
+inArray () # ( value, arrayKeysOrValues ) 
 {
   local e
   for e in "${@:2}"; do 
@@ -417,25 +417,25 @@ printTrace() # ( commandName?, exit=0? )
 }
 
 
-function startTask #( taskName )
+startTask () #( taskName )
 {
     log "${COLOR_TASK}---- TASK: $1 ------------${COLOR_STOP}"
 }
 
-function endTask #( taskName )
+endTask ()#( taskName )
 {
     log "${COLOR_TASK}---- ENDTASK: $1 ------------${COLOR_STOP}"
 }
 
 
 
-function printDate
+printDate ()
 {
     echo $(date +"%Y-%m-%d__%H-%M")
 }
 
 # used by chronos scripts
-function printCurrentTime
+printCurrentTime ()
 {
     echo $(date +"%Y-%m-%d  %H:%M:%S")
 }
@@ -447,7 +447,7 @@ function printCurrentTime
 # variables are exported using the following format:
 # BASH_MANAGER_CONFIG_$KEY
 
-function exportConfig # ()
+exportConfig ()# ()
 {
     local KEY
     for key in "${!CONFIG[@]}"; do
@@ -475,7 +475,7 @@ function exportConfig # ()
 # 
                     
                     
-function processScriptOutput # ( vars )
+processScriptOutput () # ( vars )
 {
     local isConf
     while read line
@@ -507,12 +507,12 @@ function processScriptOutput # ( vars )
 }
 
 
-function printRealTaskName # ( taskString )
+printRealTaskName () # ( taskString )
 {
     echo "$1" | cut -d'(' -f1
 }
 
-function printRealTaskExtension # ( taskString )
+printRealTaskExtension () # ( taskString )
 {
     extension=sh
     ext=$(echo "$1" | cut -d'(' -s -f2)
