@@ -124,6 +124,8 @@ Then you will get your hands dirty with two tutorials:
 - a [photoTouch tutorial](#user-content-phototut), for those who really want to master bash manager
  
  
+I also added a [task author's guideline]( https://github.com/lingtalfi/bashmanager/wiki/Task-Author-Guidelines ) document just in case.
+ 
  
 Happy learning. 
  
