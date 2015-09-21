@@ -9,7 +9,7 @@
 
 
 ############################################################
-# BASH MANAGER 1.01 - 2015-09-21
+# BASH MANAGER 1.02 - 2015-09-21: 20:28
 # By LingTalfi 
 ############################################################
 major=${BASH_VERSION:0:1}
@@ -830,8 +830,8 @@ for configFile in "${CONFIG_FILES[@]}"; do
             for key in "${!_CONFIG[@]}"; do
                 CONFIG["$key"]="${_CONFIG[$key]}" 
             done
-            dumpAssoc "CONFIG"
-            exit
+#            dumpAssoc "CONFIG"
+            
             
             
             # preparing other values for this project
@@ -879,6 +879,38 @@ for configFile in "${CONFIG_FILES[@]}"; do
                                 
                                 
                                 CONFIG[_VALUE]="$VALUE"
+                                
+                                
+                                # 1.02: override task's _VALUE from command line options 
+                                #  
+                                #  the format is:
+                                #  
+                                #  --option-key=value
+                                #  With key:
+                                #  
+                                #       <_VALUE_> <taskName> <:projectName>?
+                                #  
+                                #  
+                                for ck in "${!CONFIG[@]}"; do
+                                    if [ "_VALUE_" = "${ck:0:7}" ]; then
+                                        tmpTaskName="${ck:7}"
+                                        tmpProjectName=""
+                                        if [[ "$tmpTaskName" == *":"* ]]; then
+                                            tmpProjectName="${tmpTaskName#*:}"
+                                            tmpTaskName="${tmpTaskName%%:*}"
+                                        fi     
+                                        if [ "$tmpTaskName" = "$task" ]; then
+                                            if [ -z "$tmpProjectName" -o  "$tmpProjectName" = "$project" ]; then
+                                                CONFIG[_VALUE]="${CONFIG[$ck]}"
+                                            fi
+                                        fi
+                                        
+                                    fi
+                                done
+#                                dumpAssoc "CONFIG"
+                                
+                                
+                                
                                 
                                 
                                 log "Running task $task ($taskScript)"

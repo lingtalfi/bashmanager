@@ -124,7 +124,8 @@ Then you will get your hands dirty with two tutorials:
 - a [photoTouch tutorial](#user-content-phototut), for those who really want to master bash manager
  
  
-I also added a [task author's guideline]( https://github.com/lingtalfi/bashmanager/wiki/Task-Author-Guidelines ) document just in case.
+I also added a [Task Author's Guideline]( https://github.com/lingtalfi/bashmanager/wiki/Task-Author-Guidelines ) document just in case, 
+and an useful [Task Author Cheatsheet]( https://github.com/lingtalfi/bashmanager/wiki/Task-Author-Cheatsheet ).
  
  
 Happy learning. 
@@ -348,7 +349,7 @@ execution would look like this:
 
 
 
-Tip: if a task begin with an underscore, it's skipped.
+Tip: if a task's name begin with an underscore (in the config file), it's skipped.
 
 
 
@@ -1471,35 +1472,7 @@ see that the Bash manager framework is a good companion.
  
 
     
-Task author cheatsheet
----------------------------------------
-        
-Bash manager task author's cheatsheet.
-
-
-functions:
-
-    error ( message ) : sends a message to STDERR, exit only if STRICT mode is on (-s option)
-    log ( message ): sends a message to STDOUT, only if VERBOSE mode is on (-v option) 
-    warning ( message ): like log, but the text color is orange
-    startTask ( taskName ): uses log to display a visual start separator 
-    endTask ( taskName ): uses log to display a visual end separator
-    
-
-variables:
-
-    VALUE: string: contains the task's value for the project. Can be empty.
-    OTHER_VALUE: associative array: contains the other task's values for the current project. 
-                        OTHER_VALUE[taskName]=value
-    CONFIG: associative array: contains the key/value pairs from HOME/config.defaults, plus
-                the options set via the command line (--option-key=value).
-                Also contains some special values added by the bash manager:
-                
-                    CONFIG[_HOME]: path to the application's home
-                    CONFIG[_VALUE]: the current task's value for the current project
-                    
-    CONFIG_OPTIONS: associative array: contains only the options set via the command line with 
-                    the format --option-key=value                
+              
                 
                         
 
