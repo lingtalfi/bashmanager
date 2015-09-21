@@ -9,7 +9,7 @@
 
 
 ############################################################
-# BASH MANAGER 1.02 - 2015-09-21: 20:28
+# BASH MANAGER 1.03 - 2015-09-21: 21:39
 # By LingTalfi 
 ############################################################
 major=${BASH_VERSION:0:1}
@@ -118,6 +118,11 @@ _program_name="bash manager"
 ############################################################
 
 
+strRepeat () # (char, howMany)
+{
+    printf '%*s' $2 ''|tr ' ' "$1"
+}
+    
 _newFileInitCpt (){
     _newFileCpt=20
 }
@@ -482,10 +487,10 @@ startTask () #( taskName )
 endTask ()#( taskName )
 {
     len=${#1}
-    (( n=7 + $len + 16))
-    echo "n=$n"
+    (( n=7 + $len + 17))
+    m=$(strRepeat - "$n")
 #    log "${COLOR_TASK}---- ENDTASK: $1 ------------${COLOR_STOP}"
-    log "${COLOR_TASK}----------------${COLOR_STOP}"
+    log "${COLOR_TASK}${m}${COLOR_STOP}"
 }
 
 
@@ -883,7 +888,6 @@ for configFile in "${CONFIG_FILES[@]}"; do
                                 VALUE="${ALL_VALUES[$key]}"
                                 
                                 
-                                CONFIG[_VALUE]="$VALUE"
                                 
                                 
                                 # 1.02: override task's _VALUE from command line options 
@@ -906,7 +910,7 @@ for configFile in "${CONFIG_FILES[@]}"; do
                                         fi     
                                         if [ "$tmpTaskName" = "$task" ]; then
                                             if [ -z "$tmpProjectName" -o  "$tmpProjectName" = "$project" ]; then
-                                                CONFIG[_VALUE]="${CONFIG[$ck]}"
+                                                VALUE="${CONFIG[$ck]}"
                                             fi
                                         fi
                                         
@@ -915,6 +919,7 @@ for configFile in "${CONFIG_FILES[@]}"; do
 #                                dumpAssoc "CONFIG"
                                 
                                 
+                                CONFIG[_VALUE]="$VALUE"
                                 
                                 
                                 
