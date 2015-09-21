@@ -1,0 +1,11 @@
+
+
+
+
+
+
+BASH MANAGER 1.01 - 2015-09-21
+    Added newFileName function
+
+BASH MANAGER 1.0 - 2015-09-10
+    Initial commit

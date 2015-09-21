@@ -4,8 +4,12 @@
 
 
 
+
+
+
+
 ############################################################
-# BASH MANAGER 1.01 - 2015-09-10
+# BASH MANAGER 1.01 - 2015-09-21
 # By LingTalfi 
 ############################################################
 major=${BASH_VERSION:0:1}
@@ -112,6 +116,57 @@ _program_name="bash manager"
 ############################################################
 # Functions
 ############################################################
+
+
+_newFileInitCpt (){
+    _newFileCpt=20
+}
+
+_newFileName (){
+    
+    dir=${1:-/tmp}
+    tmp=${dir}/$RANDOM/$RANDOM/$RANDOM${RANDOM}.txt
+#    tmp=${dir}/x.txt
+    if [ -e "$tmp" ]; then
+        ((_newFileCpt--))
+        if [ $_newFileCpt -gt 0 ]; then
+            _newFileName
+        else
+            _newFileInitCpt
+            echo "newFileName: couldn't find an unique name after $_newFileCpt tries: aborting!" 2>&1
+            return 1
+        fi
+    else
+        mkdir -p ${tmp%/*} && touch "$tmp"
+        if [ 0 -eq $? ]; then 
+            echo "$tmp"
+        else
+            echo "newFileName: error: couldn't create the file $tmp" 2>&1
+            return 1
+        fi
+    fi
+}
+
+
+# Creates a new file name
+# 
+# Usage:
+# 
+# name=$(newFileName /tmp/files)
+#
+# if [ 0 -eq $? ]; then
+#     echo "name=$name"
+# else
+#     echo "error"
+# fi
+# 
+# 
+newFileName (){
+    _newFileInitCpt
+    _newFileName "$1"
+}
+
+
 
 
 #----------------------------------------
@@ -404,8 +459,14 @@ printTrace() # ( commandName?, exit=0? )
         last=$?
         ((frame++))
         if [ 0 -eq $last ]; then
-            m+=$(echo "$line" | awk '{printf "function " $2 " in file " $3 ", line " $1 "\n" }')
-            m+="\n"
+            
+            
+            zline=$(echo "$line" | cut -d " " -f 1)
+            function=$(echo "$line" | cut -d " " -f 2)
+            file=$(echo "$line" | cut -d " " -f 3-)
+            
+            m+="function $function in file $file, line $zline\n"
+            
         fi
     done
     echo -e "$m"
@@ -683,8 +744,10 @@ fi
 #----------------------------------------
 # Processing all config files found, one after another.
 #----------------------------------------
-cd "$configDir"
 for configFile in "${CONFIG_FILES[@]}"; do
+
+    # we need to cd in configDir on every iteration, since tasks can cd too
+    cd "$configDir"
     if [ -f "$configFile" ]; then
         log "Scanning config file $configFile"
         
