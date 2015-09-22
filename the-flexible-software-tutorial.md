@@ -141,13 +141,17 @@ will be used by others.
 But for now, we will simply define the home location from the command line.
 Our commands will be more verbose, but at least we can get started without further ado.
 
-To define the home location from the command line, we need to use the -h switch.
+To define the home location from the command line, we need to use the -h switch.<br>
+We also need to define the config file to use with the -c switch.<br>
+This is actually **VERY VERY IMPORTANT** because otherwise, bash manager would execute all config files
+found in the HOME/config.d directory (which is almost never what you want).
+
 Let's try it and see what happens (of course, replace the paths by your own paths):
 
 
 ```bash
 cd /path/to/bash_managers_parent_directory
-./bash_manager.sh -h /path/to/our_softwares_home 
+./bash_manager.sh -h /path/to/our_softwares_home -c me
 ```
 
     
@@ -172,7 +176,7 @@ If you do it right, the output will be:
 Since this is a long command to type already, type the following (unless you already have a bashman wrapper to the bash_manager.sh script):
 
 ```bash
-alias bashman='./bash_manager.sh -h /path/to/our_softwares_home'
+alias bashman='./bash_manager.sh -h /path/to/our_softwares_home -c me'
 ```
 
 
