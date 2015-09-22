@@ -197,7 +197,20 @@ Running your software
 --option-key=value:
    
     set an entry in the CONFIG array, with the given key and value.
-
+    
+    Can also be used to override a specific task's value, globally, or for a project in particular.
+    To override a task's value, your key must have the following format: 
+    
+        key: <_VALUE_> <taskName> <:project>?
+    
+    For instance if I want to set the value of a task named depositories to /tmp/mydepo and for all projects,
+    you can use the following option:
+        
+            --option-_VALUE_depositories=/tmp/mydep
+            
+    Now if you want to restrict this assignment to the project martin only, you can use the following:                
+    
+            --option-_VALUE_depositories:martin=/tmp/mydep
     
 
 
