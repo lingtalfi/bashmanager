@@ -118,9 +118,10 @@ To complete this tutorial, you need some basic bash skills.
 We will start by a little bit of theory, just the basics so that you have a better understanding of the different 
 concepts used by bash manager.
 
-Then you will get your hands dirty with two tutorials:
+Then you will get your hands dirty with three tutorials:
 
 - the famous [hello world tutorial](#user-content-hellotut) 
+- the [flexible software tutorial] (https://github.com/lingtalfi/bashmanager/blob/master/the-flexible-software-tutorial.md), to understand the flexibility of a bash manager software 
 - a [photoTouch tutorial](#user-content-phototut), for those who really want to master bash manager
  
  
