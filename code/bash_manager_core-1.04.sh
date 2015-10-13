@@ -75,6 +75,7 @@ CONFIG_FILES=()
 TASKS_LIST=()
 TASKS_LIST_OPTIONS=()
 TASKS_NAMES=()      # per config file 
+TASKS_SKIPPED=()       
 PROJECTS_LIST=()
 PROJECTS_LIST_OPTIONS=()
 PROJECTS_NAMES=()      # per config file 
@@ -422,12 +423,21 @@ parseAllValues ()# ( configFile )
                     if [ ":" = "${line:${#line}-1:${#line}}" ]; then
                         namespace="${line:0:${#line}-1}" 
                         
+                        
+                        
+                        # tasks defined in config file can use the _taskName notation,
+                        # which skips the task. However, the leading underscore is not part of the taskName
+                        if [ '_' = "${namespace:0:1}" ]; then
+                            namespace="${namespace:1}"
+                            TASKS_SKIPPED+=("$namespace")
+                        fi
+                        
+                        
+                        
+                        
                         # tasks defined in config file can use the taskName(extension) notation,
                         # we keep extensions in a separate TASKS_EXTENSIONS array, which only
                         # lists non sh extensions
-                        
-                        
-                        
                         epos=$(strPos "$namespace" ")")
                         if [ "-1" != "$epos" ]; then
                             pos=$(strPos "$namespace" "(")
@@ -879,10 +889,11 @@ for configFile in "${CONFIG_FILES[@]}"; do
             
             for task in "${TASKS_LIST[@]}"; do
             
+            
                 # Tasks which name begins with underscore are skipped
                 # This is handy for quick testing
-                if ! [ "_" = "${task:0:1}" ]; then
-            
+                inArray "$task" "${TASKS_EXTENSIONS[@]}"
+                if [ 0 -eq $?  ]; then
             
                     # handling foreign script direct call
                     # notation is: 

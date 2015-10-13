@@ -6,8 +6,9 @@ Versions History
 
 
 
-BASH MANAGER 1.04 - 2015-10-13 06:32
+BASH MANAGER 1.04 - 2015-10-13 
     Fixed bug with script extension 
+    Fixed bug with underscore skipping
 
 BASH MANAGER 1.03 - 2015-09-21 21:39
     Modified endTask output to improve readability
