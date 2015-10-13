@@ -9,12 +9,12 @@ The following functions are used in the core, and therefore you shouldn't define
 
 
 
-
 - _newFileInitCpt
 - _newFileName
 - abort
 - collectConfig
 - confError
+- createExpandedCommandLine
 - dumpAssoc
 - endTask
 - error
@@ -22,6 +22,7 @@ The following functions are used in the core, and therefore you shouldn't define
 - inArray
 - log
 - newFileName
+- parseAliases
 - parseAllValues
 - printAssocArray
 - printConfigLines
@@ -29,13 +30,15 @@ The following functions are used in the core, and therefore you shouldn't define
 - printDate
 - printList
 - printRealTaskExtension
-- printRealTaskName
 - printStack
 - printStackOrList
 - printTrace
+- processCommandLine
+- processHomeFromCommandLine
 - processScriptOutput
 - splitLine
 - startTask
+- strPos
 - strRepeat
 - toList
 - toStack
