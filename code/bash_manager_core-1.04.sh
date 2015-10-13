@@ -809,7 +809,7 @@ for configFile in "${CONFIG_FILES[@]}"; do
         #       ...
         # 
         parseAllValues "$configFile"
-        dumpAssoc "TASKS_EXTENSIONS"
+#        dumpAssoc "TASKS_EXTENSIONS"
         
         
         # Preparing TASKS_LIST
