@@ -6,6 +6,9 @@ Versions History
 
 
 
+BASH MANAGER 1.04 - 2015-10-13 06:32
+    Fixed bug with script extension 
+
 BASH MANAGER 1.03 - 2015-09-21 21:39
     Modified endTask output to improve readability
     Fixed bug in 1.02 (overriding VALUE too) 
