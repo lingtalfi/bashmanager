@@ -1241,47 +1241,11 @@ else {
 
 Basically, this script does the same as the bash version.
 However, there are a few rules that apply only to foreign scripts (scripts not written in bash).
-Those rules are the following:
+Those rules are explained in more details in the 
+[foreign script guidelines](https://github.com/lingtalfi/bashmanager/blob/master/doc/foreign-script-guidelines.eng.md)
+.
 
--   
 
-        a line printed from a foreign script is usually printed as is by the Bash manager script.
-        The only exceptions are the special notations described in this list.
-        A line should always terminate by the end of line symbol (\n).
-
-- 
-        values from the CONFIG array are exported in the foreign script environment, but the key is 
-        transformed to upper case, and prefixed with the string: BASH_MANAGER_CONFIG.
-        For instance, if your CONFIG array contains a key foo, you have to access it from your foreign script 
-        environment using the key BASH_MANAGER_CONFIG_FOO.                
-        In order to allow foreign script to access the task's value, for instance "cat_{number}.{extension}" in the
-        case of the rename task with project p1, the CONFIG array contains
-        a special key: _VALUE.
-        Therefore from a foreign script, you can access it with the key: BASH_MANAGER_CONFIG__VALUE.
-        
-
-- 
-
-        a foreign script can use the Bash manager's log, warning and error function.
-        If a line begin with "log:", then it's not printed to the output like a normal line, but what follows
-        is sent to the log function of the Bash manager's script.
-        The same rule applies with "warning:" and "error:" that calls the warning and error Bash manager's functions
-        respectively.
-                
-- 
-        a foreign script can tell the Bash manager script to exit with a code of X (a number between 0 and 255).
-        If a line begins with "exit: X", then it's not printed to the output like a normal line, but instead, 
-        it tells the Bash manager to exit with exit status X. 
-        
-- 
-        a foreign script can update the CONFIG array.
-        To set the key foo with value 789 in the CONFIG array,
-        a foreign script has to write the following line:
-        
-            BASH_MANAGER_CONFIG_FOO=789
-        
-        This line will not be printed like a normal line, but instead, will tell Bash manager to set the FOO
-        variable in the CONFIG array, with value 789.
         
         
         
@@ -1483,7 +1447,46 @@ see that the Bash manager framework is a good companion.
 
 
 
- 
+
+More documentation
+------------------------
+
+- [task author cheatsheet](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-cheatsheet.eng.md)
+- [creating command line aliases](https://github.com/lingtalfi/bashmanager/blob/master/doc/aliases.eng.md)
+- [task author guidelines](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-guidelines.eng.md)
+- [reserved functions](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-reserved-functions.eng.md)
+
+
+
+Version history
+------------------------
+
+
+BASH MANAGER 1.04 - 2015-10-13 
+    Fixed bug with script extension 
+    Fixed bug with underscore skipping
+    add wildcard * notation for project in config file
+    make OTHER_VALUES available to external scripts
+    add support for alwaysIncluded tasks (taskName*)
+    add support for startTask and endTask in foreign scripts
+    add support for alias
+    
+
+
+BASH MANAGER 1.03 - 2015-09-21 21:39
+    Modified endTask output to improve readability
+    Fixed bug in 1.02 (overriding VALUE too) 
+
+BASH MANAGER 1.02 - 2015-09-21 20:28
+    Added mechanism for overriding task's values from command line
+
+BASH MANAGER 1.01 - 2015-09-21
+    Added newFileName function
+
+BASH MANAGER 1.0 - 2015-09-10
+    Initial commit
+    
+    
 
     
               

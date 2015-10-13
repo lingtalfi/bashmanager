@@ -62,4 +62,12 @@ variables:
            
                     
                     
+config.defaults
+--------------------
+                    
+# Set the program name
+   
+```
+_program_name=myProgram
+```                    
                     

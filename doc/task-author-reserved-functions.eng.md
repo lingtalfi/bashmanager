@@ -18,7 +18,7 @@ The following functions are used in the core, and therefore you shouldn't define
 - dumpAssoc
 - endTask
 - error
-- exportConfig
+- exportVars
 - inArray
 - log
 - newFileName

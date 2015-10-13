@@ -75,10 +75,12 @@ CONFIG_FILES=()
 TASKS_LIST=()
 TASKS_LIST_OPTIONS=()
 TASKS_NAMES=()      # per config file 
-TASKS_SKIPPED=()       
+TASKS_SKIPPED=()              
+TASKS_ALWAYS_INCLUDED=()              
 PROJECTS_LIST=()
 PROJECTS_LIST_OPTIONS=()
 PROJECTS_NAMES=()      # per config file 
+EXPANDED_ARGS=()   
 declare -A _CONFIG      # this contains the values from config.defaults, should never be touched
 declare -A CONFIG       # every time a project is called, the CONFIG array is recreated: it's a copy of _CONFIG. 
                         # tasks can then update the CONFIG array in the scope of one project.  
@@ -89,6 +91,8 @@ declare -A ALL_VALUES # other tasks' values, namespaced with the format taskName
 declare -A OTHER_VALUES  # other project's values
 declare -A CONFIG_OPTIONS  # config options set via the command line options
 declare -A TASKS_EXTENSIONS  # taskName => extension
+declare -A ALIASES
+
 
 
 COLOR_TASK='\033[1m'
@@ -100,6 +104,9 @@ COL_IMPORTANT=$(echo -e "${COLOR_IMPORTANT}")
 COL_WARNING=$(echo -e "${COLOR_WARNING}")
 COL_STOP=$(echo -e "${COLOR_STOP}")
 
+aliasFiles=~/.bash_manager:/etc/.bash_manager
+
+
 
 
 #----------------------------------------
@@ -110,20 +117,13 @@ _program_name="bash manager"
 
 
 
-
-############################################################
-# Functions
-############################################################
-
-
-strRepeat () # (char, howMany)
-{
-    printf '%*s' $2 ''|tr ' ' "$1"
-}
-    
+#----------------------------------------
+# FUNCTIONS
+#----------------------------------------
 _newFileInitCpt (){
     _newFileCpt=20
 }
+
 
 _newFileName (){
     
@@ -150,6 +150,162 @@ _newFileName (){
     fi
 }
 
+abort (){
+    error "Aborting..."
+    exit "$ERROR_CODE"
+}
+
+
+# Store the key and values found in configFile into the array which arrayEls is given
+collectConfig ()#( arrayName, configFile )
+{
+    arr=("$1")
+    while read line
+    do
+        key=$(echo "$line" | cut -d= -f1 )
+        value=$(echo "$line" | cut -d= -f2- )        
+        if [ ${#value} -gt 0 ]; then
+            arr["$key"]="$value"            
+        fi
+    done < <(printConfigLines "$2")    
+}
+
+
+confError () # ()
+{
+    error "Bad config: $1"
+}
+
+createExpandedCommandLine(){
+    while :; do
+        key="$1"
+                
+        if [ -z "$key" ]; then
+            break
+        fi                
+                
+        case "$key" in
+            *)  
+                add=$1
+                found=0
+                for k in "${!ALIASES[@]}"; do
+                    if [ "$k" = "$1" ]; then
+                        values="${ALIASES[$k]}"
+                        IFS=$' '
+                        arr=( $values )
+                        unset IFS
+                        for i in "${arr[@]}"; do
+                            EXPANDED_ARGS+=("$i")    
+                        done    
+                        found=1
+                        break
+                    fi
+                done
+                
+                if [ 0 -eq $found ]; then
+                    EXPANDED_ARGS+=("$add")
+                fi
+            ;;
+        esac
+        shift
+    done
+}
+
+
+dumpAssoc ()# ( arrayName ) 
+{
+    title="${1^^}"
+    echo 
+    echo "======= $title ========"
+    printAssocArray "$1"
+    echo "======================"
+    echo       
+}
+
+
+endTask ()#( taskName )
+{
+    len=${#1}
+    (( n=7 + $len + 17))
+    m=$(strRepeat - "$n")
+#    log "${COLOR_TASK}---- ENDTASK: $1 ------------${COLOR_STOP}"
+    log "${COLOR_TASK}${m}${COLOR_STOP}"
+}
+
+
+error () # ( message )
+{
+    echo -e "$_program_name: error: $1" >&2
+    RETURN_CODE=$ERROR_CODE
+    
+    if [ 1 -eq $VERBOSE ]; then
+        printTrace    
+    fi
+    
+    if [ 1 -eq $STRICT_MODE ]; then
+        exit 1
+    fi
+}
+
+
+# This function will export the variables array for other scripting 
+# languages, like php or python for instance.
+#
+# For XXX array, where XXX can be one of CONFIG, OTHER_VALUES
+# keys will be:
+# BASH_MANAGER_XXX_$KEY
+# 
+# keys are uppercased
+
+exportVars ()# ()
+{
+    local KEY
+    for key in "${!CONFIG[@]}"; do
+        KEY=$(echo "$key" | tr '[:lower:]' '[:upper:]')
+        export "BASH_MANAGER_CONFIG_${KEY}"="${CONFIG[$key]}"
+    done
+    
+    for key in "${!OTHER_VALUES[@]}"; do
+        KEY=$(echo "$key" | tr '[:lower:]' '[:upper:]')
+        export "BASH_MANAGER_OTHER_VALUES_${KEY}"="${CONFIG[$key]}"
+    done
+}
+
+
+
+
+# We can use this function to do one of the following:
+# -- check if an associative array has a certain key            inArray "myKey" "${!myArray[@]}" 
+# -- check if an associative array contains a certain value     inArray "myValue" "${myArray[@]}"
+# Beware: Returns 0 if value is in the array, and 1 if it is not!! 
+inArray () # ( value, arrayKeysOrValues ) 
+{
+  local e
+  for e in "${@:2}"; do 
+    [[ "$e" == "$1" ]] && return 0; 
+  done
+  return 1
+}
+
+
+
+# level=0 means no special color
+# level=1 means warning color
+# level=2 means important color
+log () # (message, level=0)
+{
+    if [ 1 -eq $VERBOSE ]; then
+        if [ -z "$2" ]; then
+            echo -e "$1" | sed "s/^/$_program_name\(v\): /g"
+        else
+            if [ "1" = "$2" ]; then
+                echo -e "$1" | sed -e "s/^.*$/${_program_name}\(v\): ${COL_WARNING}&${COL_STOP}/g"
+            elif [ "2" = "$2" ]; then
+                echo -e "$1" | sed -e "s/^.*$/${_program_name}\(v\): ${COL_IMPORTANT}&${COL_STOP}/g"
+            fi
+        fi
+    fi
+}
 
 # Creates a new file name
 # 
@@ -169,6 +325,395 @@ newFileName (){
     _newFileName "$1"
 }
 
+
+# Parses a file like this:
+# 
+# alias[myId]:
+#
+# sh = ssh komin
+# doo = rm -r /tmp/*
+#
+#
+# alias[myId2]:
+# 
+# soo = -f rzog -t kabin
+# 
+# 
+# and creates an associative array.
+# For instance parseSection "alias" "myId"
+# returns the following array:
+# - sh => ssh komin
+# - doo => rm -r /tmp/*
+#
+#
+#
+parseAliases() # (chanel, sectionName)
+{
+    channel=$1
+    sectionName=$2
+    search="$channel[$sectionName]:"    
+    lineno=1
+    isStarted=0
+    
+    
+    oldIfs="$IFS"
+
+    IFS=$':'
+    array=( $aliasFiles )
+    unset IFS
+    
+    
+    for aliasFile in "${array[@]}"; do
+        if [ -f "$aliasFile" ]; then
+            while read line || [ -n "$line" ]; do
+                if [ -n "$line" ]; then
+                    line="$(echo $line | xargs)" # trimming
+                    
+                    # strip comments: lines which first char is a sharp (#)
+                    if ! [ '#' = "${line:0:1}" ]; then
+                    
+                        if [ 0 -eq $isStarted ]; then
+                            if [ "$search" = "$line" ]; then
+                                isStarted=1
+                            fi
+                        else
+                            if [[ "$line" == *"="* ]]; then
+                                key=$(echo "$line" | cut -d= -f1 )
+                                value=$(echo "$line" | cut -d= -f2- )
+                                ALIASES[$(echo "$key" | xargs)]=$(echo "$value" | xargs)
+                            else
+                                # assuming section change (or could be syntax error)
+                                break
+                            fi
+                        fi            
+                    fi
+                fi
+                (( lineno++ ))
+            done < "$aliasFile"  
+            break
+        fi
+    done
+}
+
+
+
+parseAllValues ()# ( configFile ) 
+{
+    configFile="$1"
+    namespace=""
+    lineno=1
+    while read line || [ -n "$line" ]; do
+        if [ -n "$line" ]; then
+            line="$(echo $line | xargs)" # trimming
+            
+            # strip comments: lines which first char is a sharp (#)
+            if ! [ '#' = "${line:0:1}" ]; then
+                if [[ "$line" == *"="* ]]; then
+                    if [ -n "$namespace" ]; then
+                        key=$(echo "$line" | cut -d= -f1 )
+                        value=$(echo "$line" | cut -d= -f2- )
+                        ALL_VALUES["${namespace}_${key}"]="$value"
+                        
+                        inArray "$key" "${PROJECTS_NAMES[@]}"
+                        if [ 1 -eq $?  ]; then
+                            # wildcard is reserved: it means all project, therefore it's not a project name
+                            if [ '*' != "$key" ]; then
+                                PROJECTS_NAMES+=("$key")
+                                log "Project found: $key"
+                            fi
+                        fi 
+                        
+                    else
+                        warning "No namespace found for the first lines of file $configFile"
+                    fi
+                else
+                    # if the last char is colon (:) and the line doesn't contain an equal symbol(=) 
+                    # then it defines a new namespace
+                    if [ ":" = "${line:${#line}-1:${#line}}" ]; then
+                        namespace="${line:0:${#line}-1}"
+                        isSkipped=0  
+                        isAlwaysIncluded=0  
+                        ext=sh 
+                         
+                        
+
+                        
+                        # tasks defined in config file can use the _taskName notation,
+                        # which skips the task. However, the leading underscore is not part of the taskName
+                        if [ '_' = "${namespace:0:1}" ]; then
+                            namespace="${namespace:1}"
+                            isSkipped=1     
+                        fi
+                        
+                        # tasks defined in config file can use the taskName* notation,
+                        # which always include the task. However, the trailing star is not part of the taskName
+                        if [ '*' = "${namespace:${#namespace}-1:1}" ]; then
+                            namespace="${namespace:0:${#namespace}-1}"
+                            isAlwaysIncluded=1     
+                        fi
+             
+                        
+                        
+                        # tasks defined in config file can use the taskName(extension) notation,
+                        # we keep extensions in a separate TASKS_EXTENSIONS array, which only
+                        # lists non sh extensions
+                        epos=$(strPos "$namespace" ")")
+                        if [ "-1" != "$epos" ]; then
+                            pos=$(strPos "$namespace" "(")
+                            if [ "-1" != "$pos" ]; then
+                                if [ $epos -gt $pos ]; then
+                                    ext="${namespace:$pos+1:$epos-$pos-1}"
+                                    namespace="${namespace:0:$pos}"
+                                    
+                                fi                                 
+                            fi
+                        fi                         
+                     
+                        
+                        log "Namespace found: $namespace"
+                        
+                        TASKS_NAMES+=("$namespace")
+                        if [ 1 -eq $isSkipped ]; then
+                            TASKS_SKIPPED+=("$namespace")
+                        elif [ 1 -eq $isAlwaysIncluded ]; then
+                            TASKS_ALWAYS_INCLUDED+=("$namespace")
+                        fi
+                        
+                        if [ 'sh' != "$ext" ]; then
+                            TASKS_EXTENSIONS["$namespace"]="$ext"
+                        fi
+                        
+                    else
+                        error "Unknown line type in file $configFile, line $lineno: ignoring"
+                    fi
+                fi 
+            fi
+        fi
+        (( lineno++ ))
+    done < "$configFile"    
+}
+
+
+printAssocArray ()# ( assocArrayName ) 
+{
+    var=$(declare -p "$1")
+    eval "declare -A _arr="${var#*=}
+    for k in "${!_arr[@]}"; do
+        echo "$k: ${_arr[$k]}"
+    done
+    
+}
+
+# This method should print ---non blank and comments stripped--- lines of the given config file
+printConfigLines ()
+{
+
+   while read line || [ -n "$line" ]; do
+        
+        # strip comments
+        line=$(echo "$line" | cut -d# -f1 )
+        if [ -n "$line" ]; then
+            echo "$line"
+        fi
+   done < "$1"    
+}
+
+# used by chronos scripts
+printCurrentTime ()
+{
+    echo $(date +"%Y-%m-%d  %H:%M:%S")
+}
+
+
+printDate ()
+{
+    echo $(date +"%Y-%m-%d__%H-%M")
+}
+
+
+
+# same as toList, but prints a header first 
+printList ()# ( header, arrayEls, ?sep=", " ) 
+{
+    echo -n "$1"
+    sep=${3:-, }
+    toList "$2" "$sep"
+}
+
+printRealTaskExtension () # ( taskString )
+{
+    extension=sh    
+    for name in "${!TASKS_EXTENSIONS[@]}"; do
+        if [ "$1" = "$name" ]; then
+            extension="${TASKS_EXTENSIONS[$name]}"
+            break
+        fi
+    done
+    echo "$extension"
+}
+
+
+# same as toStack, but prints a header first 
+printStack ()# ( header, arrayEls, ?leader="-- " ) 
+{
+    echo -n "$1"
+    lead=${3:--- }
+    toStack "$2" "$lead"
+}
+
+printStackOrList ()
+{
+    name=("${!2}")
+    len="${#name[@]}"
+    if [ $len -gt 2 ]; then
+        printStack "$1" "$2" 
+    else
+        third=${3:-, }
+        printList "$1" "$2"
+    fi
+}
+
+
+printTrace() # ( commandName?, exit=0? ) 
+{
+    
+    m=""
+    m+="Trace:\n"
+    m+="----------------------\n"
+    local frame=0
+    last=0
+    while [ 0 -eq $last ]; do
+        line="$( caller $frame )"
+        last=$?
+        ((frame++))
+        if [ 0 -eq $last ]; then
+            
+            
+            zline=$(echo "$line" | cut -d " " -f 1)
+            function=$(echo "$line" | cut -d " " -f 2)
+            file=$(echo "$line" | cut -d " " -f 3-)
+            
+            m+="function $function in file $file, line $zline\n"
+            
+        fi
+    done
+    echo -e "$m"
+}
+
+
+
+processCommandLine(){
+
+    while :; do
+        key="$1"        
+        case "$key" in
+            --option-*=*)
+                optionName=$(echo "$1" | cut -d= -f1)
+                optionValue=$(echo "$1" | cut -d= -f2-)
+                optionName="${optionName:9}"
+                CONFIG_OPTIONS["$optionName"]="$optionValue"
+                ;;
+            -c) 
+                CONFIG_FILES+=("$2")
+                shift 
+            ;;
+            -h) 
+                # actually, home has been previously processed 
+#                _home=("$2")
+                shift 
+            ;;
+            -p) 
+                PROJECTS_LIST_OPTIONS+=("$2")
+                shift 
+            ;;
+            -s) 
+                STRICT_MODE=1
+            ;;
+            -t) 
+                TASKS_LIST_OPTIONS+=("$2")
+                shift 
+            ;;
+            -v) 
+                VERBOSE=1
+            ;;
+            *)  
+                break
+            ;;
+        esac
+        shift
+    done
+}
+
+
+processHomeFromCommandLine(){
+
+    while :; do
+        key="$1"
+        case "$key" in
+            -h) 
+                _home=("$2")
+                shift
+            ;;
+            *)  
+                break
+            ;;            
+        esac
+        shift
+    done
+}
+
+
+# This function work in pair with exportVars.
+# What it does is process the output of a script coded in 
+# another scripting language (php, python, perl...).
+# Such a script is called "foreign" script
+# There is a convention for those foreign scripts to be aware of:
+#       - Every line should end with the carriage return
+#       - a line starting with
+#                       log:
+#               will be send to the bash manager log
+# 
+#       - foreign scripts can update the content of the CONFIG array.
+#               a line with the following format:
+#               BASH_MANAGER_CONFIG_$KEY=$VALUE
+
+#               will add the key $KEY with value $VALUE to the
+#               CONFIG array. 
+#
+processScriptOutput () # ( vars )
+{
+    local isConf
+    while read line
+    do
+        if [ "log:" = "${line:0:4}" ]; then
+            log "${line:4}"
+        elif [ "warning:" = "${line:0:8}" ]; then
+            warning "${line:8}"
+        elif [ "error:" = "${line:0:6}" ]; then
+            error "${line:6}"
+        elif [ "startTask:" = "${line:0:10}" ]; then
+            startTask "${line:10}"
+        elif [ "endTask:" = "${line:0:8}" ]; then
+            endTask "${line:8}"
+        elif [ "exit:" = "${line:0:5}" ]; then
+            exit $(echo "$line" | cut -d: -f2)
+        else
+            isConf=0
+            if [ "BASH_MANAGER_CONFIG_" = "${line:0:20}" ]; then
+                if [[ "$line" == *"="* ]]; then 
+                    value=$(echo "$line" | cut -d= -f2- )
+                    key=$(echo "$line" | cut -d= -f1 )
+                    key="${key:20}"
+                    CONFIG["$key"]="$value"
+                    isConf=1
+                fi
+            fi
+            if [ 0 -eq $isConf ]; then
+                echo "$line"
+            fi
+        fi 
+    done <<< "$1"
+}
 
 
 
@@ -223,66 +768,21 @@ splitLine () # ( string, delimiter [, argNameN ]* )
     
 }
 
-
-
-
-
-# Utils
-error () # ( message )
+startTask () #( taskName )
 {
-    echo -e "$_program_name: error: $1" >&2
-    RETURN_CODE=$ERROR_CODE
+    log "${COLOR_TASK}---- TASK: $1 ------------${COLOR_STOP}"
+}
+
+strPos() { # ( haystack, needle ) 
+  x="${1%%$2*}"
+  [[ $x = $1 ]] && echo -1 || echo ${#x}
+}
+
+strRepeat () # (char, howMany)
+{
+    printf '%*s' $2 ''|tr ' ' "$1"
+}
     
-    if [ 1 -eq $VERBOSE ]; then
-        printTrace    
-    fi
-    
-    if [ 1 -eq $STRICT_MODE ]; then
-        exit 1
-    fi
-}
-
-
-
-warning () # ( message)
-{
-    old=$VERBOSE
-    VERBOSE=1
-    log "$1" "1"
-    VERBOSE=$old
-}
-
-confError () # ()
-{
-    error "Bad config: $1"
-}
-
-abort (){
-    error "Aborting..."
-    exit "$ERROR_CODE"
-}
-
-
-# level=0 means no special color
-# level=1 means warning color
-# level=2 means important color
-log () # (message, level=0)
-{
-    if [ 1 -eq $VERBOSE ]; then
-        if [ -z "$2" ]; then
-            echo -e "$1" | sed "s/^/$_program_name\(v\): /g"
-        else
-            if [ "1" = "$2" ]; then
-                echo -e "$1" | sed -e "s/^.*$/${_program_name}\(v\): ${COL_WARNING}&${COL_STOP}/g"
-            elif [ "2" = "$2" ]; then
-                echo -e "$1" | sed -e "s/^.*$/${_program_name}\(v\): ${COL_IMPORTANT}&${COL_STOP}/g"
-            fi
-        fi
-    fi
-}
-
-
-
 
 # outputs a list of elements of separated by a sep 
 toList ()# ( arrayEls, ?sep ) 
@@ -300,25 +800,6 @@ toList ()# ( arrayEls, ?sep )
     echo 
 }
 
-
-# same as toList, but prints a header first 
-printList ()# ( header, arrayEls, ?sep=", " ) 
-{
-    echo -n "$1"
-    sep=${3:-, }
-    toList "$2" "$sep"
-}
-
-printAssocArray ()# ( assocArrayName ) 
-{
-    var=$(declare -p "$1")
-    eval "declare -A _arr="${var#*=}
-    for k in "${!_arr[@]}"; do
-        echo "$k: ${_arr[$k]}"
-    done
-    
-}
-
 # outputs an array as a stack beginning by a leading expression 
 toStack ()# ( arrayEls, ?leader="-- ") 
 {
@@ -330,342 +811,31 @@ toStack ()# ( arrayEls, ?leader="-- ")
     done
 }
 
-
-# same as toStack, but prints a header first 
-printStack ()# ( header, arrayEls, ?leader="-- " ) 
+warning () # ( message)
 {
-    echo -n "$1"
-    lead=${3:--- }
-    toStack "$2" "$lead"
-}
-
-printStackOrList ()
-{
-    name=("${!2}")
-    len="${#name[@]}"
-    if [ $len -gt 2 ]; then
-        printStack "$1" "$2" 
-    else
-        third=${3:-, }
-        printList "$1" "$2"
-    fi
-}
-
-# This method should print ---non blank and comments stripped--- lines of the given config file
-printConfigLines ()
-{
-   while read line || [ -n "$line" ]; do
-        
-        # strip comments
-        line=$(echo "$line" | cut -d# -f1 )
-        if [ -n "$line" ]; then
-            echo "$line"
-        fi
-   done < "$1"    
-}
-
-# Store the key and values found in configFile into the array which arrayEls is given
-collectConfig ()#( arrayName, configFile )
-{
-    arr=("$1")
-    while read line
-    do
-        key=$(echo "$line" | cut -d= -f1 )
-        value=$(echo "$line" | cut -d= -f2- )        
-        if [ ${#value} -gt 0 ]; then
-            arr["$key"]="$value"            
-        fi
-    done < <(printConfigLines "$2")    
+    old=$VERBOSE
+    VERBOSE=1
+    log "$1" "1"
+    VERBOSE=$old
 }
 
 
 
-dumpAssoc ()# ( arrayName ) 
-{
-    title="${1^^}"
-    echo 
-    echo "======= $title ========"
-    printAssocArray "$1"
-    echo "======================"
-    echo       
-}
-
-
-parseAllValues ()# ( configFile ) 
-{
-    configFile="$1"
-    namespace=""
-    lineno=1
-    while read line || [ -n "$line" ]; do
-        if [ -n "$line" ]; then
-            line="$(echo $line | xargs)" # trimming
-            
-            # strip comments: lines which first char is a sharp (#)
-            if ! [ '#' = "${line:0:1}" ]; then
-                if [[ "$line" == *"="* ]]; then
-                    if [ -n "$namespace" ]; then
-                        key=$(echo "$line" | cut -d= -f1 )
-                        value=$(echo "$line" | cut -d= -f2- )
-                        ALL_VALUES["${namespace}_${key}"]="$value"
-                        
-                        inArray "$key" "${PROJECTS_NAMES[@]}"
-                        if [ 1 -eq $?  ]; then
-                            PROJECTS_NAMES+=("$key")
-                            log "Project found: $key"
-                        fi 
-                        
-                    else
-                        warning "No namespace found for the first lines of file $configFile"
-                    fi
-                else
-                    # if the last char is colon (:) and the line doesn't contain an equal symbol(=) 
-                    # then it defines a new namespace
-                    if [ ":" = "${line:${#line}-1:${#line}}" ]; then
-                        namespace="${line:0:${#line}-1}" 
-                        
-                        
-                        
-                        # tasks defined in config file can use the _taskName notation,
-                        # which skips the task. However, the leading underscore is not part of the taskName
-                        if [ '_' = "${namespace:0:1}" ]; then
-                            namespace="${namespace:1}"
-                            TASKS_SKIPPED+=("$namespace")
-                        fi
-                        
-                        
-                        
-                        
-                        # tasks defined in config file can use the taskName(extension) notation,
-                        # we keep extensions in a separate TASKS_EXTENSIONS array, which only
-                        # lists non sh extensions
-                        epos=$(strPos "$namespace" ")")
-                        if [ "-1" != "$epos" ]; then
-                            pos=$(strPos "$namespace" "(")
-                            if [ "-1" != "$pos" ]; then
-                                if [ $epos -gt $pos ]; then
-                                    extension="${namespace:$pos+1:$epos-$pos-1}"
-                                    namespace="${namespace:0:$pos}"
-                                    TASKS_EXTENSIONS["$namespace"]="$extension"
-                                fi                                 
-                            fi
-                        fi 
-                        
-                        log "Namespace found: $namespace"
-                        TASKS_NAMES+=("$namespace")
-                    else
-                        error "Unknown line type in file $configFile, line $lineno: ignoring"
-                    fi
-                fi 
-            fi
-        fi
-        (( lineno++ ))
-    done < "$configFile"    
-}
 
 
 
-# We can use this function to do one of the following:
-# -- check if an associative array has a certain key            inArray "myKey" "${!myArray[@]}" 
-# -- check if an associative array contains a certain value     inArray "myValue" "${myArray[@]}"
-inArray () # ( value, arrayKeysOrValues ) 
-{
-  local e
-  for e in "${@:2}"; do 
-    [[ "$e" == "$1" ]] && return 0; 
-  done
-  return 1
-}
-
-
-
-printTrace() # ( commandName?, exit=0? ) 
-{
-    
-    m=""
-    m+="Trace:\n"
-    m+="----------------------\n"
-    local frame=0
-    last=0
-    while [ 0 -eq $last ]; do
-        line="$( caller $frame )"
-        last=$?
-        ((frame++))
-        if [ 0 -eq $last ]; then
-            
-            
-            zline=$(echo "$line" | cut -d " " -f 1)
-            function=$(echo "$line" | cut -d " " -f 2)
-            file=$(echo "$line" | cut -d " " -f 3-)
-            
-            m+="function $function in file $file, line $zline\n"
-            
-        fi
-    done
-    echo -e "$m"
-}
-
-
-startTask () #( taskName )
-{
-    log "${COLOR_TASK}---- TASK: $1 ------------${COLOR_STOP}"
-}
-
-endTask ()#( taskName )
-{
-    len=${#1}
-    (( n=7 + $len + 17))
-    m=$(strRepeat - "$n")
-#    log "${COLOR_TASK}---- ENDTASK: $1 ------------${COLOR_STOP}"
-    log "${COLOR_TASK}${m}${COLOR_STOP}"
-}
-
-
-
-printDate ()
-{
-    echo $(date +"%Y-%m-%d__%H-%M")
-}
-
-# used by chronos scripts
-printCurrentTime ()
-{
-    echo $(date +"%Y-%m-%d  %H:%M:%S")
-}
-
-
-
-# This function will export the CONFIG array for other scripting 
-# languages, like php or python for instance.
-# variables are exported using the following format:
-# BASH_MANAGER_CONFIG_$KEY
-
-exportConfig ()# ()
-{
-    local KEY
-    for key in "${!CONFIG[@]}"; do
-        KEY=$(echo "$key" | tr '[:lower:]' '[:upper:]')
-        export "BASH_MANAGER_CONFIG_${KEY}"="${CONFIG[$key]}"
-    done
-}
-
-# This function work in pair with exportConfig.
-# What it does is process the output of a script coded in 
-# another scripting language (php, python, perl...).
-# Such a script is called "foreign" script
-# There is a convention for those foreign scripts to be aware of:
-#       - Every line should end with the carriage return
-#       - a line starting with
-#                       log:
-#               will be send to the bash manager log
-# 
-#       - foreign scripts can update the content of the CONFIG array.
-#               a line with the following format:
-#               BASH_MANAGER_CONFIG_$KEY=$VALUE
-
-#               will add the key $KEY with value $VALUE to the
-#               CONFIG array. 
-# 
-                    
-                    
-processScriptOutput () # ( vars )
-{
-    local isConf
-    while read line
-    do
-        if [ "log:" = "${line:0:4}" ]; then
-            log "${line:4}"
-        elif [ "warning:" = "${line:0:8}" ]; then
-            warning "${line:8}"
-        elif [ "error:" = "${line:0:6}" ]; then
-            error "${line:6}"
-        elif [ "exit:" = "${line:0:5}" ]; then
-            exit $(echo "$line" | cut -d: -f2)
-        else
-            isConf=0
-            if [ "BASH_MANAGER_CONFIG_" = "${line:0:20}" ]; then
-                if [[ "$line" == *"="* ]]; then 
-                    value=$(echo "$line" | cut -d= -f2- )
-                    key=$(echo "$line" | cut -d= -f1 )
-                    key="${key:20}"
-                    CONFIG["$key"]="$value"
-                    isConf=1
-                fi
-            fi
-            if [ 0 -eq $isConf ]; then
-                echo "$line"
-            fi
-        fi 
-    done <<< "$1"
-}
-
-
-
-printRealTaskExtension () # ( taskString )
-{
-    extension=sh    
-    for name in "${!TASKS_EXTENSIONS[@]}"; do
-        if [ "$1" = "$name" ]; then
-            extension="${TASKS_EXTENSIONS[$name]}"
-            break
-        fi
-    done
-    echo "$extension"
-}
-
-
-strPos() { # ( haystack, needle ) 
-  x="${1%%$2*}"
-  [[ $x = $1 ]] && echo -1 || echo ${#x}
-}
-		
-	
-		
 ############################################################
 # MAIN SCRIPT
 ############################################################
 
 
 #----------------------------------------
-# Processing command line options
+# First, we want to get the home parameter
 #----------------------------------------
-while :; do
-    key="$1"
-    case "$key" in
-        --option-*=*)
-            optionName=$(echo "$1" | cut -d= -f1)
-            optionValue=$(echo "$1" | cut -d= -f2-)
-            optionName="${optionName:9}"
-            CONFIG_OPTIONS["$optionName"]="$optionValue"
-            ;;
-        -c) 
-            CONFIG_FILES+=("$2")
-            shift 
-        ;;
-        -h) 
-            _home=("$2")
-            shift 
-        ;;
-        -p) 
-            PROJECTS_LIST_OPTIONS+=("$2")
-            shift 
-        ;;
-        -s) 
-            STRICT_MODE=1
-        ;;
-        -t) 
-            TASKS_LIST_OPTIONS+=("$2")
-            shift 
-        ;;
-        -v) 
-            VERBOSE=1
-        ;;
-        *)  
-            break
-        ;;
-    esac
-    shift
-done
-
+# It can be passed by inclusion of this script,
+# or using the command line.
+# Below, we parse the command line
+processHomeFromCommandLine "$@"
 
 #----------------------------------------
 # bash manager requires that the _home variable
@@ -705,9 +875,6 @@ fi
 [ $RETURN_CODE -eq 1 ] && abort
 
 
-
-
-
 #----------------------------------------
 # Prepare _CONFIG from config.defaults
 #----------------------------------------
@@ -725,11 +892,9 @@ for key in "${!CONFIG_OPTIONS[@]}"; do
     _CONFIG["$key"]="${CONFIG_OPTIONS[$key]}"
 done
 
+
 # we will add a special _HOME value for the tasks
 _CONFIG[_HOME]="$_home"
-
-
-
 
 
 #----------------------------------------
@@ -745,6 +910,7 @@ else
         CONFIG_FILES[$i]="./${CONFIG_FILES[$i]}.txt"
     done
 fi
+
 
 
 
@@ -765,11 +931,6 @@ fi
 
 
 
-
-
-
-
-
 #----------------------------------------
 # Spread special internal variables
 #----------------------------------------
@@ -779,7 +940,39 @@ fi
 
 
 
+#----------------------------------------
+# Processing aliases 
+#----------------------------------------
+parseAliases "alias" "$_program_name"
 
+
+#----------------------------------------
+# Processing command line options,
+# expanding aliases
+#----------------------------------------
+createExpandedCommandLine "$@"
+
+
+processCommandLine "${EXPANDED_ARGS[@]}"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#----------------------------------------
+# THE MAIN LOOP
 #----------------------------------------
 # Processing all config files found, one after another.
 #----------------------------------------
@@ -820,6 +1013,10 @@ for configFile in "${CONFIG_FILES[@]}"; do
         # 
         parseAllValues "$configFile"
 #        dumpAssoc "TASKS_EXTENSIONS"
+#        dumpAssoc "ALL_VALUES"
+#        dumpAssoc "PROJECTS_NAMES"
+#        dumpAssoc "TASKS_SKIPPED"
+#        dumpAssoc "TASKS_ALWAYS_INCLUDED"
         
         
         # Preparing TASKS_LIST
@@ -833,9 +1030,19 @@ for configFile in "${CONFIG_FILES[@]}"; do
             for task in "${TASKS_LIST_OPTIONS[@]}"; do
                 TASKS_LIST+=("$task")
             done              
-        fi    
+        fi
+        
+        # add the tasks always included
+        for task in "${TASKS_ALWAYS_INCLUDED[@]}"; do
+            TASKS_LIST+=("$task")
+        done            
+            
+            
 #        dumpAssoc "TASKS_NAMES"
 #        dumpAssoc "TASKS_LIST"
+        
+        
+       
         
         
         # Preparing PROJECTS_LIST_OPTIONS
@@ -881,118 +1088,133 @@ for configFile in "${CONFIG_FILES[@]}"; do
                 if [ "_$project" = "${key:${#key}-$plen}" ]; then
                     ptask="${key:0:${#key}-$plen}"
                     OTHER_VALUES["$ptask"]="${ALL_VALUES[$key]}"
+                elif [ '_*' = "${key:${#key}-2}" ]; then
+                    ptask="${key:0:${#key}-2}"
+                    OTHER_VALUES["$ptask"]="${ALL_VALUES[$key]}"
                 fi 
             done
 #            dumpAssoc "OTHER_VALUES"
             
             
             
-            for task in "${TASKS_LIST[@]}"; do
+            for task in "${TASKS_NAMES[@]}"; do
             
             
-                # Tasks which name begins with underscore are skipped
-                # This is handy for quick testing
-                inArray "$task" "${TASKS_EXTENSIONS[@]}"
-                if [ 0 -eq $?  ]; then
-            
-                    # handling foreign script direct call
-                    # notation is: 
-                    #       taskName(extension)
-                    #       
-                    #       
-                    realTaskExtension=$(printRealTaskExtension "$task")
-                    realTask=$task
+                inArray "$task" "${TASKS_LIST[@]}"
+                if [ 0 -eq $? ]; then
+                
+                    # Tasks which name begins with underscore are skipped
+                    # This is handy for quick testing
+                    inArray "$task" "${TASKS_SKIPPED[@]}"
+                    isSkipped=$?
                     
                     
-            
-                    taskScript="$tasksDir/$realTask.${realTaskExtension}"
-                    if [ -f "$taskScript" ]; then
+                    if [ 1 -eq $isSkipped  ]; then
+                
+                        # handling foreign script direct call
+                        # notation is: 
+                        #       taskName(extension)
+                        #       
+                        #       
+                        realTaskExtension=$(printRealTaskExtension "$task")
+                        realTask=$task
                         
-                            # Prepare the values to pass to the script
-                                                 
-                            key="${task}_${project}"
+                        
+                
+                        taskScript="$tasksDir/$realTask.${realTaskExtension}"
+                        if [ -f "$taskScript" ]; then
                             
-                            inArray "$key" "${!ALL_VALUES[@]}"
-                            if [ 0 -eq $? ]; then
-                                VALUE="${ALL_VALUES[$key]}"
+                                # Prepare the values to pass to the script
+                                                     
                                 
                                 
-                                
-                                
-                                # 1.02: override task's _VALUE from command line options 
-                                #  
-                                #  the format is:
-                                #  
-                                #  --option-key=value
-                                #  With key:
-                                #  
-                                #       <_VALUE_> <taskName> <:projectName>?
-                                #  
-                                #  
-                                for ck in "${!CONFIG[@]}"; do
-                                    if [ "_VALUE_" = "${ck:0:7}" ]; then
-                                        tmpTaskName="${ck:7}"
-                                        tmpProjectName=""
-                                        if [[ "$tmpTaskName" == *":"* ]]; then
-                                            tmpProjectName="${tmpTaskName#*:}"
-                                            tmpTaskName="${tmpTaskName%%:*}"
-                                        fi     
-                                        if [ "$tmpTaskName" = "$task" ]; then
-                                            if [ -z "$tmpProjectName" -o  "$tmpProjectName" = "$project" ]; then
-                                                VALUE="${CONFIG[$ck]}"
-                                            fi
-                                        fi
-                                        
-                                    fi
-                                done
-#                                dumpAssoc "CONFIG"
-                                
-                                
-                                CONFIG[_VALUE]="$VALUE"
-                                
-                                
-                                
-                                log "Running task $task ($taskScript)"
-                                
-                                
-                                
-                                if [ "sh" = "$realTaskExtension" ]; then
-                                    . "$taskScript"
-                                else
-                                    # running foreign script
-                                    isHandled=1
-                                    exportConfig
-                                    case "$realTaskExtension" in
-                                        php)
-                                            __vars=$(php -f "$taskScript")
-                                        ;;
-                                        py)
-                                            __vars=$(python "$taskScript")
-                                        ;;
-                                        rb)
-                                            __vars=$(ruby "$taskScript")
-                                        ;;
-                                        pl)
-                                            __vars=$(perl "$taskScript")
-                                        ;;
-                                        *)
-                                            error "The $realTaskExtension extension is not handled. Email me if you think it should be."
-                                            isHandled=0
-                                        ;;
-                                    esac
+                                inArray "$task" "${!OTHER_VALUES[@]}"
+                                if [ 0 -eq $? ]; then                                
+                                    VALUE="${OTHER_VALUES[$task]}"
                                     
-                                    if [ 1 -eq $isHandled ]; then
-                                        processScriptOutput "$__vars"
-                                    fi
-                                fi                                
-                            fi
-                            
-                            
+                                    
+                                    
+                                    
+                                    # 1.02: override task's _VALUE from command line options 
+                                    #  
+                                    #  the format is:
+                                    #  
+                                    #  --option-key=value
+                                    #  With key:
+                                    #  
+                                    #       <_VALUE_> <taskName> <:projectName>?
+                                    #  
+                                    #  
+                                    for ck in "${!CONFIG[@]}"; do
+                                        if [ "_VALUE_" = "${ck:0:7}" ]; then
+                                            tmpTaskName="${ck:7}"
+                                            tmpProjectName=""
+                                            if [[ "$tmpTaskName" == *":"* ]]; then
+                                                tmpProjectName="${tmpTaskName#*:}"
+                                                tmpTaskName="${tmpTaskName%%:*}"
+                                            fi     
+                                            if [ "$tmpTaskName" = "$task" ]; then
+                                                if [ -z "$tmpProjectName" -o  "$tmpProjectName" = "$project" ]; then
+                                                    VALUE="${CONFIG[$ck]}"
+                                                fi
+                                            fi
+                                            
+                                        fi
+                                    done
+    #                                dumpAssoc "CONFIG"
+                                    
+                                    
+                                    CONFIG[_VALUE]="$VALUE"
+                                    
+                                    
+                                    
+                                    log "Running task $task ($taskScript)"
+                                    
+                                    
+                                    # script should use only the following vars:
+                                    # - VALUE
+                                    # - CONFIG
+                                    # - CONFIG_OPTIONS
+                                    # - OTHER_VALUES
+                                    
+                                    if [ "sh" = "$realTaskExtension" ]; then
+                                        . "$taskScript"
+                                    else
+                                        # running foreign script
+                                        isHandled=1
+                                        exportVars
+                                        case "$realTaskExtension" in
+                                            php)
+                                                __vars=$(php -f "$taskScript")
+                                            ;;
+                                            py)
+                                                __vars=$(python "$taskScript")
+                                            ;;
+                                            rb)
+                                                __vars=$(ruby "$taskScript")
+                                            ;;
+                                            pl)
+                                                __vars=$(perl "$taskScript")
+                                            ;;
+                                            *)
+                                                error "The $realTaskExtension extension is not handled. Email me if you think it should be."
+                                                isHandled=0
+                                            ;;
+                                        esac
+                                        
+                                        if [ 1 -eq $isHandled ]; then
+                                            processScriptOutput "$__vars"
+                                        fi
+                                    fi                                
+                                fi
+                                
+                                
+                        else
+                            error "Script not found: $taskScript"
+                        fi
                     else
-                        error "Script not found: $taskScript"
+                        log "skipping task ${task} by the underscore convention"
                     fi
-                else
-                    log "skipping task ${task} by the underscore convention"
                 fi
             done
             
