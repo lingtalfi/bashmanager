@@ -157,61 +157,9 @@ Running your software
 ### Bash manager's command line options
 
 
-
--c configPath:
-
-    adds a user config file to parse.
-    It can be used multiple times.
-    configPath is a relative path, relative to HOME/config.d directory.
-    The .txt extension must not be specified.
-    If the -c option is not set, all config files located in config.d will be used (this is probably not what you want).
-
-
--h home:
- 
-    sets the HOME path. 
-    
-        
--p project:
-
-    adds a project to parse.
-    It can be used multiple times.
-    
--s:
-
-    set the STRICT_MODE flag to 1.
-    If STRICT_MODE=1, your software will quit at the first error encountered.
-    
--t task:
-
-    adds a task to parse.
-    It can be used multiple times.
-    
--v:
-
-    set the VERBOSE flag to 1.
-    If VERBOSE=0, the log and warning calls do nothing.
-    If VERBOSE=1, the log and warning calls output to STDOUT.
-    
-    
---option-key=value:
-   
-    set an entry in the CONFIG array, with the given key and value.
-    
-    Can also be used to override a specific task's value, globally, or for a project in particular.
-    To override a task's value, your key must have the following format: 
-    
-        key: <_VALUE_> <taskName> <:project>?
-    
-    For instance if I want to set the value of a task named depositories to /tmp/mydepo and for all projects,
-    you can use the following option:
-        
-            --option-_VALUE_depositories=/tmp/mydep
-            
-    Now if you want to restrict this assignment to the project martin only, you can use the following:                
-    
-            --option-_VALUE_depositories:martin=/tmp/mydep
-    
+Bash manager's command line options are described in the 
+[command Line Options](https://github.com/lingtalfi/bashmanager/blob/master/doc/commandLineOptions.eng.md) 
+document
 
 
 
@@ -1451,15 +1399,25 @@ see that the Bash manager framework is a good companion.
 More documentation
 ------------------------
 
-- [task author cheatsheet](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-cheatsheet.eng.md)
-- [creating command line aliases](https://github.com/lingtalfi/bashmanager/blob/master/doc/aliases.eng.md)
-- [task author guidelines](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-guidelines.eng.md)
-- [reserved functions](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-reserved-functions.eng.md)
+Although this document is quite wordy, we didn't cover every aspect of the bash manager.<br>
+The following links might help you deepen your knowledge of the bash manager.
+ 
+
+- [Task Author Cheatsheet](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-cheatsheet.eng.md)
+- [Task Author Guidelines](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-guidelines.eng.md)
+- [Reserved Functions](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-reserved-functions.eng.md)
+- [Command Line Aliases](https://github.com/lingtalfi/bashmanager/blob/master/doc/aliases.eng.md)
+- [command Line Options](https://github.com/lingtalfi/bashmanager/blob/master/doc/commandLineOptions.eng.md)
 
 
 
 Version history
 ------------------------
+
+
+BASH MANAGER 1.05 - 2015-10-14
+    Added vv (very verbose) option, reduced the default verbosity of the bash man original command
+    
 
 
 BASH MANAGER 1.04 - 2015-10-13 
@@ -1498,29 +1456,6 @@ BASH MANAGER 1.0 - 2015-09-10
     
     
 
-
-
-
-
-
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
  
  
  

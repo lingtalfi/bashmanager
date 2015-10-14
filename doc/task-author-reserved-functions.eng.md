@@ -21,6 +21,7 @@ The following functions are used in the core, and therefore you shouldn't define
 - exportVars
 - inArray
 - log
+- logg
 - newFileName
 - parseAliases
 - parseAllValues
