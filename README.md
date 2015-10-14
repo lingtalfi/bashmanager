@@ -1405,9 +1405,22 @@ The following links might help you deepen your knowledge of the bash manager.
 
 - [Task Author Cheatsheet](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-cheatsheet.eng.md)
 - [Task Author Guidelines](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-guidelines.eng.md)
+- [Foreign Script Guidelines](https://github.com/lingtalfi/bashmanager/blob/master/doc/foreign-script-guidelines.eng.md)
 - [Reserved Functions](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-reserved-functions.eng.md)
 - [Command Line Aliases](https://github.com/lingtalfi/bashmanager/blob/master/doc/aliases.eng.md)
 - [command Line Options](https://github.com/lingtalfi/bashmanager/blob/master/doc/commandLineOptions.eng.md)
+
+
+
+Plugins
+--------------------
+
+- [phpManager](https://github.com/lingtalfi/bashmanager_plugin_phpmanager)
+    
+    php plugin for bash manager: makes developing more obvious for php developer
+
+
+
 
 
 
