@@ -12,6 +12,35 @@ Bash manager is a mini framework for creating simple command line utilities (cal
 It's written in bash 4. 
  
  
+ 
+It's all about automation
+-------------------------------
+ 
+When I think about automation, there is always a trade off: 
+if I need to execute a task once, I don't want to automate the task, because it would take too long
+to write the automation code.
+However, the more you have to repeat the task manually, the more automation appears as a better approach.
+
+Bash manager is a task oriented framework.
+The good thing about that is that once you've create a task, boom: it's there forever, and you can just reuse 
+it for all your projects.
+The net benefit of this is that when you need to repeat the task for another project,
+using bash manager you just need to duplicate some config lines and adapt them to the new project,
+it takes literally less than one minute to do so.
+
+Writing automation might seems a daunting task, but sometimes, it's almost just as easy as copy pasting a long bash command line
+in a file.
+
+Furthermore, bash manager, as a framework, helps you to reduce the overhead necessary to automate things.
+So if you like to automate things, the bash manager might be a helpful companion for you.
+
+
+
+ 
+ 
+ 
+ 
+ 
 Features
 ------------------------ 
 
