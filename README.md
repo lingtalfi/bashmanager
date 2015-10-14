@@ -1433,53 +1433,39 @@ Version history
 ------------------------
 
 
-BASH MANAGER 1.05 - 2015-10-14
+- 1.05 - 2015-10-14
+
     Added vv (very verbose) option, reduced the default verbosity of the bash man original command
     
 
 
-BASH MANAGER 1.04 - 2015-10-13 
-    Fixed bug with script extension 
-    Fixed bug with underscore skipping
-    add wildcard * notation for project in config file
-    make OTHER_VALUES available to external scripts
-    add support for alwaysIncluded tasks (taskName*)
-    add support for startTask and endTask in foreign scripts
-    add support for alias
+- 1.04 - 2015-10-13
+ 
+    - Fixed bug with script extension 
+    - Fixed bug with underscore skipping
+    - add wildcard * notation for project in config file
+    - make OTHER_VALUES available to external scripts
+    - add support for alwaysIncluded tasks (taskName*)
+    - add support for startTask and endTask in foreign scripts
+    - add support for alias
     
 
 
-BASH MANAGER 1.03 - 2015-09-21 21:39
-    Modified endTask output to improve readability
-    Fixed bug in 1.02 (overriding VALUE too) 
+- 1.03 - 2015-09-21 21:39
 
-BASH MANAGER 1.02 - 2015-09-21 20:28
+    - Modified endTask output to improve readability
+    - Fixed bug in 1.02 (overriding VALUE too) 
+
+- 1.02 - 2015-09-21 20:28
+
     Added mechanism for overriding task's values from command line
 
-BASH MANAGER 1.01 - 2015-09-21
+- 1.01 - 2015-09-21
+
     Added newFileName function
 
-BASH MANAGER 1.0 - 2015-09-10
+- 1.0 - 2015-09-10
+
     Initial commit
     
-    
 
-    
-              
-                
-                        
-
-
-
-    
-    
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
