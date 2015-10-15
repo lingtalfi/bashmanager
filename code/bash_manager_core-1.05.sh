@@ -908,38 +908,6 @@ done
 _CONFIG[_HOME]="$_home"
 
 
-#----------------------------------------
-# Collecting configuration files.
-# If the user doesn't specify config files on the command line,
-# we use all the config files located in the HOME/config.d directory
-#----------------------------------------
-cd "$configDir"
-if [ -z $CONFIG_FILES ]; then
-    CONFIG_FILES=($(find . | grep '\.txt$'))
-else
-    for i in "${!CONFIG_FILES[@]}"; do
-        CONFIG_FILES[$i]="./${CONFIG_FILES[$i]}.txt"
-    done
-fi
-
-
-
-
-#----------------------------------------
-# Outputting some info on STDOUT
-#----------------------------------------
-log "$(printStack 'Collecting config files: ' CONFIG_FILES[@])"
-if [ -z $TASKS_LIST_OPTIONS ]; then
-    log "Collecting tasks: (all)"
-else        
-    log "$(printStack 'Collecting tasks: ' TASKS_LIST_OPTIONS[@])"
-fi
-if [ -z $PROJECTS_LIST_OPTIONS ]; then
-    log "Collecting projects: (all)"
-else        
-    log "$(printStack 'Collecting projects: ' PROJECTS_LIST_OPTIONS[@])"
-fi
-
 
 
 #----------------------------------------
@@ -970,13 +938,36 @@ processCommandLine "${EXPANDED_ARGS[@]}"
 
 
 
+#----------------------------------------
+# Collecting configuration files.
+# If the user doesn't specify config files on the command line,
+# we use all the config files located in the HOME/config.d directory
+#----------------------------------------
+cd "$configDir"
+if [ -z $CONFIG_FILES ]; then
+    CONFIG_FILES=($(find . | grep '\.txt$'))
+else
+    for i in "${!CONFIG_FILES[@]}"; do
+        CONFIG_FILES[$i]="./${CONFIG_FILES[$i]}.txt"
+    done
+fi
 
 
 
-
-
-
-
+#----------------------------------------
+# Outputting some info on STDOUT
+#----------------------------------------
+log "$(printStack 'Collecting config files: ' CONFIG_FILES[@])"
+if [ -z $TASKS_LIST_OPTIONS ]; then
+    log "Collecting tasks: (all)"
+else        
+    log "$(printStack 'Collecting tasks: ' TASKS_LIST_OPTIONS[@])"
+fi
+if [ -z $PROJECTS_LIST_OPTIONS ]; then
+    log "Collecting projects: (all)"
+else        
+    log "$(printStack 'Collecting projects: ' PROJECTS_LIST_OPTIONS[@])"
+fi
 
 
 
@@ -991,6 +982,8 @@ for configFile in "${CONFIG_FILES[@]}"; do
 
     # we need to cd in configDir on every iteration, since tasks can cd too
     cd "$configDir"
+    
+    
     if [ -f "$configFile" ]; then
         log "Scanning config file $configFile"
         
