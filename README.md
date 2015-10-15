@@ -1408,6 +1408,7 @@ Although this document is quite wordy, we didn't cover every aspect of the bash 
 The following links might help you deepen your knowledge of the bash manager.
  
 
+- [Install Bashmanager](https://github.com/lingtalfi/bashmanager/blob/master/doc/install-bashmanager.eng.md)
 - [Task Author Cheatsheet](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-cheatsheet.eng.md)
 - [Task Author Guidelines](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-guidelines.eng.md)
 - [Foreign Script Guidelines](https://github.com/lingtalfi/bashmanager/blob/master/doc/foreign-script-guidelines.eng.md)
