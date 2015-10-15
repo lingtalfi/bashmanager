@@ -29,6 +29,16 @@ Features
 
 
 
+Who is using it?
+--------------------
+
+Bash manager is used in the following projects:
+
+- [Webmaster Wizard]( https://github.com/lingtalfi/webmaster-wizard )
+
+
+
+
 Requirements 
 -----------------
 
