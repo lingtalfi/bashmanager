@@ -33,7 +33,7 @@ Any bash manager software inherits the following command line options.
     the projects that it finds.
     
     As of version 1.06, if you don't want to use a project, but just use a task and providing your own options for instance,
-    you can use the special _none_ value.
+    you can use the special _none_ value
     
     
     
@@ -66,7 +66,7 @@ Any bash manager software inherits the following command line options.
     Can also be used to override a specific task's value, globally, or for a project in particular.
     To override a task's value, your key must have the following format: 
     
-        key: <_VALUE_> <taskName> <project>?
+        key: <_VALUE_> <taskName> <:project>?
     
     For instance if I want to set the value of a task named depositories to /tmp/mydepo and for all projects,
     you can use the following option:

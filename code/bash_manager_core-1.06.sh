@@ -900,14 +900,8 @@ do
 done < <(printConfigLines "$configDefaults")
 
 
-for key in "${!CONFIG_OPTIONS[@]}"; do
-    _CONFIG["$key"]="${CONFIG_OPTIONS[$key]}"
-done
-
-
 # we will add a special _HOME value for the tasks
 _CONFIG[_HOME]="$_home"
-
 
 
 
@@ -934,6 +928,15 @@ createExpandedCommandLine "$@"
 
 
 processCommandLine "${EXPANDED_ARGS[@]}"
+
+
+#----------------------------------------
+# Prepare _CONFIG from command line options
+#----------------------------------------
+for key in "${!CONFIG_OPTIONS[@]}"; do
+    _CONFIG["$key"]="${CONFIG_OPTIONS[$key]}"
+done
+
 
 
 
@@ -1139,7 +1142,6 @@ for configFile in "${CONFIG_FILES[@]}"; do
                                     
                                     
                                     
-                                    
                                     # 1.02: override task's _VALUE from command line options 
                                     #  
                                     #  the format is:
@@ -1166,8 +1168,6 @@ for configFile in "${CONFIG_FILES[@]}"; do
                                             
                                         fi
                                     done
-    #                                dumpAssoc "CONFIG"
-                                    
                                     
                                     CONFIG[_VALUE]="$VALUE"
                                     
