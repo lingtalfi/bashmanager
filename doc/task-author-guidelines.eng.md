@@ -123,6 +123,12 @@ In a task where the value is required, this would probably mean skip the task wi
 
 
 
+Php task authors, use the phpManager plugin
+------------------------------------------------
+
+If you are comfortable with php, you should look at the 
+[phpManager plugin](https://github.com/lingtalfi/bashmanager_plugin_phpmanager),
+which make developing tasks with php easier.
         
                                         
 
