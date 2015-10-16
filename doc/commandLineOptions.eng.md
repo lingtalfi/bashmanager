@@ -66,7 +66,7 @@ Any bash manager software inherits the following command line options.
     Can also be used to override a specific task's value, globally, or for a project in particular.
     To override a task's value, your key must have the following format: 
     
-        key: <_VALUE_> <taskName> <:project>?
+        key: <_VALUE_> <taskName> <project>?
     
     For instance if I want to set the value of a task named depositories to /tmp/mydepo and for all projects,
     you can use the following option:
