@@ -1425,6 +1425,7 @@ The following links might help you deepen your knowledge of the bash manager.
 - [Reserved Functions](https://github.com/lingtalfi/bashmanager/blob/master/doc/task-author-reserved-functions.eng.md)
 - [Command Line Aliases](https://github.com/lingtalfi/bashmanager/blob/master/doc/aliases.eng.md)
 - [command Line Options](https://github.com/lingtalfi/bashmanager/blob/master/doc/commandLineOptions.eng.md)
+- [Constraints](https://github.com/lingtalfi/bashmanager/blob/master/doc/constraints.eng.md)
 
 
 
@@ -1444,6 +1445,12 @@ Version history
 ------------------------
 
 
+- 1.06 - 2015-10-16
+
+    Add feature: special _none_ project can be used to execute any task 
+    fix bug: tasks are now searched recursively under tasks.d (not just the root level) 
+    
+    
 - 1.05 - 2015-10-14
 
     Added vv (very verbose) option, reduced the default verbosity of the bash man original command

@@ -29,6 +29,14 @@ Any bash manager software inherits the following command line options.
     adds a project to parse.
     It can be used multiple times.
     
+    By default, if you don't specify a project, bashmanager will execute all 
+    the projects that it finds.
+    
+    As of version 1.06, if you don't want to use a project, but just use a task and providing your own options for instance,
+    you can use the special _none_ value.
+    
+    
+    
 -s:
 
     set the STRICT_MODE flag to 1.

@@ -102,7 +102,26 @@ log "myTask: file not found: ${filePath}"
 Do not exit
 ------------------
         
-Never put an exit statement in your task, this would prevent other tasks from being executed.
+Never put an exit statement in your bash task, this would prevent other tasks from being executed.
+If you use a foreign script, you can safely exit, because foreign scripts are called in their own processes.
+
+
+
+
+
+Handle the case of the empty task value
+------------------------------------------
+
+Some task don't require value, they just need to be called.
+Some other tasks require a (per project) task value and cannot work without it.
+
+As of version 1.06, it is possible to execute a task without specifying a project,
+which basically means that any task can be called without a value specified.
+
+Therefore, task authors should always handle the case where an empty value is passed to their task.
+In a task where the value is required, this would probably mean skip the task without triggering a warning or an error.
+
+
 
         
                                         
