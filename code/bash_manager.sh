@@ -1,1 +1,1 @@
-bash_manager_core-1.06.sh
+bash_manager_core-1.07.sh

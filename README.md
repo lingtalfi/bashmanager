@@ -1445,6 +1445,11 @@ Version history
 ------------------------
 
 
+- 1.07 - 2015-10-20
+
+    Add feature: --option-key=value can now be written --option-key value    
+    
+    
 - 1.06 - 2015-10-16
 
     Add feature: special _none_ project can be used to execute any task 
