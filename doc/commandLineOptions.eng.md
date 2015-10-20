@@ -61,6 +61,7 @@ Any bash manager software inherits the following command line options.
     
 --option-key=value:
    
+   
     set an entry in the CONFIG array, with the given key and value.
     
     Can also be used to override a specific task's value, globally, or for a project in particular.
@@ -77,4 +78,8 @@ Any bash manager software inherits the following command line options.
     
             --option-_VALUE_depositories:martin=/tmp/mydep
     
+--option-key value:
 
+    As of version 1.07
+    Same as --option-key=value
+    
