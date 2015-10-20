@@ -1215,7 +1215,7 @@ for configFile in "${CONFIG_FILES[@]}"; do
                                 
                                 
                         else
-                            error "Script not found: $taskScript"
+                            error "Script not found: $taskScript ($task)"
                         fi
                     else
                         log "skipping task ${task} by the underscore convention"
