@@ -656,6 +656,10 @@ processCommandLine(){
                 VERBOSE=2
             ;;
             *)  
+                if [ '' != "$1" ]; then
+                    error "Unknown command line expression: $1"
+                    exit
+                fi
                 break
             ;;
         esac
