@@ -25,7 +25,7 @@ Features
 - separation of concerns: you can focus on developing the utility
 - automatic handling of the command line options 
 - use of presets (save a lot of command line options typing) 
-- support for different scripting languages: bash, php, python, perl or ruby.
+- support for different scripting languages: bash, php, python, perl, ruby or java  
 
 
 
@@ -80,7 +80,7 @@ For instance, if we wanted to construct a simple backup tool, our tasks could be
 
 In this case you would have to create the four tasks: A, B, C and D.
 Tasks are simple scripts (just like the core).<br>
-However, you can write tasks in bash, php, python, ruby or perl if you want to.
+However, you can write tasks in bash, php, python, ruby, perl or java if you want to.
 
 
 #### Tasks order matters
@@ -1091,7 +1091,7 @@ using another scripting language.
 ### Creating the rename task using another scripting language
 
 The Bash manager framework allows us, with a little extra work, to use any scripting 
-language (python, php, perl, ruby, etc...).
+language (python, php, perl, ruby, java, etc...).
 
 
 In this section, I will demonstrate how we could have use php to create the rename task (which is currently coded in bash 4+).
@@ -1133,6 +1133,7 @@ The following extensions are available:
 - sh => a bash script
 - php => a php script
 - py => a python script
+- java => a java program
 - rb => a ruby script
 - pl => a perl script
 
@@ -1445,6 +1446,10 @@ Version history
 ------------------------
 
 
+- 1.08 - 2015-10-29
+
+    Add support for java (as foreign language)    
+    
 - 1.07 - 2015-10-20
 
     Add feature: --option-key=value can now be written --option-key value    

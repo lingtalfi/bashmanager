@@ -115,3 +115,37 @@ echo "log: hello" . PHP_EOL; // this will call the native log function defined i
 Don't forget to end the line with the end of line symbol, or bash manager might not be able to process it properly.
     
     
+    
+    
+Some snippets
+--------------------
+
+### java
+
+```
+# that's the call in your bash manager configuration
+MyBashManHello(java):
+project1=Friday
+```
+
+```java
+# source code of your java program
+public class MyBashManHello {
+
+
+    public static void main(String[] args) {
+
+        String value = System.getenv("BASH_MANAGER_CONFIG__VALUE");
+        System.out.println("log:Java said: value from bash manager is " + value);
+
+    }
+}
+
+```
+
+Note: we don't need to bother with the package, because bash manager simply don't handles them.
+So instead, we use a program name that will not conflict with our other java programs.
+Here: MyBashManHello does not conflict with any other java program in my environment.
+
+
+    
