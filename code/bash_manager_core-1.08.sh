@@ -961,7 +961,7 @@ done
 #----------------------------------------
 cd "$configDir"
 if [ -z $CONFIG_FILES ]; then
-    CONFIG_FILES=($(find . | grep '\.txt$'))
+    CONFIG_FILES=($(find . | grep --color=never '\.txt$'))
 else
     for i in "${!CONFIG_FILES[@]}"; do
         CONFIG_FILES[$i]="./${CONFIG_FILES[$i]}.txt"
