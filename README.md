@@ -1446,6 +1446,11 @@ Version history
 ------------------------
 
 
+- 1.09 - 2016-02-27
+
+    Add CONFIG[_CONFIG_FILE] reserved key    
+    
+    
 - 1.08 - 2015-10-29
 
     Add support for java (as foreign language)    

@@ -38,6 +38,7 @@ variables:
                 
                     CONFIG[_HOME]: path to the application's home
                     CONFIG[_VALUE]: the current task's value for the current project
+                    CONFIG[_CONFIG_FILE]: the current config file (path relative to the config directory)
                     
         To override the task's value from the command line, you can use the --option-key=value format,
         but your key must have the following format: 
